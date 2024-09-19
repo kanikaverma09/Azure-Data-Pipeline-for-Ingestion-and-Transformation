@@ -1,0 +1,40 @@
+{
+	"name": "mb255079_pipeline_RIM",
+	"properties": {
+		"activities": [
+			{
+				"name": "mb255079_dataflow_rim1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 5,
+					"retryIntervalInSeconds": 300,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "mb255079_RIM_dataflow",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "None",
+					"cacheSinks": {
+						"firstRowOnly": true
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "mb255079"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-26T09:54:32Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

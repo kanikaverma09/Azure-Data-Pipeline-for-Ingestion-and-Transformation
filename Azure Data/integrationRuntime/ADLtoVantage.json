@@ -1,0 +1,6 @@
+{
+	"name": "ADLtoVantage",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"name": "td-aa-trng-adf",
+	"properties": {
+		"globalParameters": {
+			"EmailTo": {
+				"type": "string",
+				"value": "sudipta.sarkar@teradata.com,sumit.jain@teradata.com"
+			}
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "99f707b1-f729-4e8f-98b2-210d3d4abb9a",
+		"tenantId": "7998488c-180b-404d-9d7f-b4bd6f46b2df"
+	}
+}
