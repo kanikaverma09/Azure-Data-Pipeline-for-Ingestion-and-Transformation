@@ -1,7 +1,3 @@
-# Azure-Data-Pipeline-for-Ingestion-and-Transformation
-
-
-
 
 # Data Ingestion and Transformation Pipeline using Azure Data Factory
 
