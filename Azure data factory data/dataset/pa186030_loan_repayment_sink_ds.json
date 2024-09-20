@@ -1,0 +1,32 @@
+{
+    "name": "pa186030_loan_repayment_sink_ds",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "adls_ls",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "fileName": {
+                "type": "string"
+            }
+        },
+        "folder": {
+            "name": "pa186030"
+        },
+        "annotations": [],
+        "type": "Json",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobFSLocation",
+                "fileName": {
+                    "value": "@dataset().fileName",
+                    "type": "Expression"
+                },
+                "folderPath": "Input",
+                "fileSystem": "pa186030"
+            }
+        },
+        "schema": {}
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,206 @@
+{
+    "name": "main_pipeline",
+    "properties": {
+        "activities": [
+            {
+                "name": "Execute Loan Pipeline",
+                "type": "ExecutePipeline",
+                "dependsOn": [],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "pa186030_UseCase",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true
+                }
+            },
+            {
+                "name": "Set Activity Name",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Set Pipeline Name Fail",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "variableName": "Activity",
+                    "value": {
+                        "value": "@activity('Execute Loan Pipeline').Error.target",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "Email on Pipeline Failure",
+                "type": "WebActivity",
+                "dependsOn": [
+                    {
+                        "activity": "Set Error Message",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "method": "POST",
+                    "url": "https://prod-91.eastus.logic.azure.com:443/workflows/5c6ee5f98803419c94d3c4830be37908/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vzyfUibJvi1cjqLbDl97OzhTB1QPK1uHouk_eKTrZ10",
+                    "body": {
+                        "value": "@concat('{ \n\t\"EmailTo\" : \"',pipeline().parameters.Email_To,'\", \n\t\"Activity\" : \"',variables('Activity'),'\",\n\t\"Subject\" : \"',pipeline().parameters.Failure_Subject,'\",\n\t\"DataFactoryName\" : \"',pipeline().DataFactory,'\",\t\n\t\"PipelineName\" : \"',variables('PipelineName'),'\", \n\t\"ErrorMessage\" : \"',variables('ErrorMessage'),'\"\n\t}')",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "Set Error Message",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Set Activity Name",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "variableName": "ErrorMessage",
+                    "value": {
+                        "value": "@activity('Execute Loan Pipeline').Error.message",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "Set Pipeline Name Fail",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Execute Loan Pipeline",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "variableName": "PipelineName",
+                    "value": {
+                        "value": "@activity('Execute Loan Pipeline').output.pipelineName",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "Email on Pipeline Success",
+                "type": "WebActivity",
+                "dependsOn": [
+                    {
+                        "activity": "Set Pipeline Name Success",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "method": "POST",
+                    "url": "https://prod-13.eastus.logic.azure.com:443/workflows/50b24a688e8443549152dfb8f9d24d83/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=b454gTNPh1GWEhT-OrDjXW84MjYwBbepb1VLCEtVYvg",
+                    "body": {
+                        "value": "@concat('{ \n\t\"EmailTo\" : \"',pipeline().parameters.Email_To,'\", \n\t\"Subject\" : \"',pipeline().parameters.Success_Subject,'\",\n\t\"DataFactoryName\" : \"',pipeline().DataFactory,'\",\t\n\t\"PipelineName\" : \"',variables('PipelineName'),'\"\n\t}')",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "Set Pipeline Name Success",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Execute Loan Pipeline",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "variableName": "PipelineName",
+                    "value": {
+                        "value": "@activity('Execute Loan Pipeline').output.pipelineName",
+                        "type": "Expression"
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "Email_To": {
+                "type": "string",
+                "defaultValue": "pranav.ayare@teradata.com"
+            },
+            "Failure_Subject": {
+                "type": "string",
+                "defaultValue": "Pipeline Execution Failure"
+            },
+            "Success_Subject": {
+                "type": "string",
+                "defaultValue": "Pipeline Execution Success"
+            }
+        },
+        "variables": {
+            "Activity": {
+                "type": "String"
+            },
+            "ErrorMessage": {
+                "type": "String"
+            },
+            "PipelineName": {
+                "type": "String"
+            }
+        },
+        "folder": {
+            "name": "pa186030"
+        },
+        "annotations": [],
+        "lastPublishTime": "2024-07-30T10:48:05Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

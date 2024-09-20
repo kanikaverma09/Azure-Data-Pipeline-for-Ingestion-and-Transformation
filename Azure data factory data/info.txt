@@ -1,0 +1,6 @@
+selected resource name:		main_pipeline
+selected resource type:		pipeline
+factory name:			td-aa-trng-adf
+factory location:		eastus
+subscription id:		1f037183-21d0-4c33-8356-296f23107c7c
+time of download (UTC):		Fri, 20 Sep 2024 10:02:19 GMT

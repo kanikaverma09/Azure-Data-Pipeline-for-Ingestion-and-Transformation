@@ -1,0 +1,453 @@
+{
+    "name": "pa186030_UseCase",
+    "properties": {
+        "activities": [
+            {
+                "name": "Get Metadata Customer",
+                "type": "GetMetadata",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "dataset": {
+                        "referenceName": "pa186030_customer_json_source_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Customer_File",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "fieldList": [
+                        "exists"
+                    ],
+                    "storeSettings": {
+                        "type": "AzureBlobFSReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    },
+                    "formatSettings": {
+                        "type": "JsonReadSettings"
+                    }
+                }
+            },
+            {
+                "name": "Get Metadata Loan",
+                "type": "GetMetadata",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "dataset": {
+                        "referenceName": "pa186030_loan_source_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Loan_File",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "fieldList": [
+                        "exists"
+                    ],
+                    "storeSettings": {
+                        "type": "AzureBlobFSReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    },
+                    "formatSettings": {
+                        "type": "JsonReadSettings"
+                    }
+                }
+            },
+            {
+                "name": "Check if all copy is successful",
+                "type": "IfCondition",
+                "dependsOn": [
+                    {
+                        "activity": "Copy Customer File",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    },
+                    {
+                        "activity": "Copy Loan File",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    },
+                    {
+                        "activity": "Copy Loan Repayment File",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "expression": {
+                        "value": "@and(and(equals(activity('Copy Customer File').status,'Succeeded'),equals(activity('Copy Loan File').status,'Succeeded')),equals(activity('Copy Loan Repayment File').status,'Succeeded'))",
+                        "type": "Expression"
+                    },
+                    "ifFalseActivities": [
+                        {
+                            "name": "Web Mail",
+                            "type": "WebActivity",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 1,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "method": "POST",
+                                "headers": {
+                                    "Content-type": "application/json"
+                                },
+                                "url": {
+                                    "value": "https://prod-91.eastus.logic.azure.com:443/workflows/5c6ee5f98803419c94d3c4830be37908/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vzyfUibJvi1cjqLbDl97OzhTB1QPK1uHouk_eKTrZ10",
+                                    "type": "Expression"
+                                },
+                                "body": {
+                                    "value": "@concat('{ \n\t\"EmailTo\" : \"',pipeline().parameters.Email_To,'\", \n\t\"Activity\" : \"',variables('Activity'),'\",\n\t\"Subject\" : \"',pipeline().parameters.Subject,'\",\n\t\"DataFactoryName\" : \"',pipeline().DataFactory,'\",\t\n\t\"PipelineName\" : \"',pipeline().Pipeline,'\", \n\t\"ErrorMessage\" : \"',pipeline().parameters.File_Error,'\"\n\t}')",
+                                    "type": "Expression"
+                                }
+                            }
+                        }
+                    ],
+                    "ifTrueActivities": [
+                        {
+                            "name": "Databricks Notebook",
+                            "type": "DatabricksNotebook",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 1,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "userProperties": [],
+                            "typeProperties": {
+                                "notebookPath": "/pa186030/Use_Case",
+                                "baseParameters": {
+                                    "customer_file": {
+                                        "value": "@pipeline().parameters.Customer_File",
+                                        "type": "Expression"
+                                    },
+                                    "loan_file": {
+                                        "value": "@pipeline().parameters.Loan_File",
+                                        "type": "Expression"
+                                    },
+                                    "loan_repayment_file": {
+                                        "value": "@pipeline().parameters.Loan_Repayment_File",
+                                        "type": "Expression"
+                                    }
+                                }
+                            },
+                            "linkedServiceName": {
+                                "referenceName": "adb_ls",
+                                "type": "LinkedServiceReference"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "Get Metadata Loan Repayment",
+                "type": "GetMetadata",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "dataset": {
+                        "referenceName": "pa186030_loan_repayment_source_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Loan_Repayment_File",
+                                "type": "Expression"
+                            }
+                        }
+                    },
+                    "fieldList": [
+                        "exists"
+                    ],
+                    "storeSettings": {
+                        "type": "AzureBlobFSReadSettings",
+                        "recursive": true,
+                        "enablePartitionDiscovery": false
+                    },
+                    "formatSettings": {
+                        "type": "JsonReadSettings"
+                    }
+                }
+            },
+            {
+                "name": "Copy Customer File",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "Get Metadata Customer",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "JsonSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "JsonReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "JsonSink",
+                        "storeSettings": {
+                            "type": "AzureBlobFSWriteSettings"
+                        },
+                        "formatSettings": {
+                            "type": "JsonWriteSettings"
+                        }
+                    },
+                    "enableStaging": false
+                },
+                "inputs": [
+                    {
+                        "referenceName": "pa186030_customer_json_source_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Customer_File",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "pa186030_customer_json_sink_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Customer_File",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "Copy Loan File",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "Get Metadata Loan",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "JsonSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "JsonReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "JsonSink",
+                        "storeSettings": {
+                            "type": "AzureBlobFSWriteSettings"
+                        },
+                        "formatSettings": {
+                            "type": "JsonWriteSettings"
+                        }
+                    },
+                    "enableStaging": false
+                },
+                "inputs": [
+                    {
+                        "referenceName": "pa186030_loan_source_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Loan_File",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "pa186030_loan_sink_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Loan_File",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "Copy Loan Repayment File",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "Get Metadata Loan Repayment",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 1,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "JsonSource",
+                        "storeSettings": {
+                            "type": "AzureBlobFSReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "JsonReadSettings"
+                        }
+                    },
+                    "sink": {
+                        "type": "JsonSink",
+                        "storeSettings": {
+                            "type": "AzureBlobFSWriteSettings"
+                        },
+                        "formatSettings": {
+                            "type": "JsonWriteSettings"
+                        }
+                    },
+                    "enableStaging": false
+                },
+                "inputs": [
+                    {
+                        "referenceName": "pa186030_loan_repayment_source_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Loan_Repayment_File",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ],
+                "outputs": [
+                    {
+                        "referenceName": "pa186030_loan_repayment_sink_ds",
+                        "type": "DatasetReference",
+                        "parameters": {
+                            "fileName": {
+                                "value": "@pipeline().parameters.Loan_Repayment_File",
+                                "type": "Expression"
+                            }
+                        }
+                    }
+                ]
+            }
+        ],
+        "parameters": {
+            "Email_To": {
+                "type": "string",
+                "defaultValue": "pranav.ayare@teradata.com"
+            },
+            "Subject": {
+                "type": "string",
+                "defaultValue": "Email Notification for Data Factory Pipeline"
+            },
+            "File_Error": {
+                "type": "string",
+                "defaultValue": "File Not Found"
+            },
+            "Notebook_Error": {
+                "type": "string",
+                "defaultValue": "Unable to connect to Notebook"
+            },
+            "Customer_File": {
+                "type": "string",
+                "defaultValue": "Customer.json"
+            },
+            "Loan_File": {
+                "type": "string",
+                "defaultValue": "Loan.json"
+            },
+            "Loan_Repayment_File": {
+                "type": "string",
+                "defaultValue": "LoanRepayment.json"
+            }
+        },
+        "variables": {
+            "Activity": {
+                "type": "String"
+            }
+        },
+        "folder": {
+            "name": "pa186030"
+        },
+        "annotations": [],
+        "lastPublishTime": "2024-07-31T06:59:36Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
