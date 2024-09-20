@@ -45,6 +45,7 @@ These sources are configured in Azure Data Factory as **datasets**, and the pipe
 A pipeline in Azure Data Factory orchestrates the entire data ingestion and transformation process. It pulls data from the source, transforms it, and loads it into the destination.
 
 ---
+![image](https://github.com/user-attachments/assets/9f4794dd-70fe-44c6-b096-b9708fa0233b)
 
 ### Data Ingestion
 
